@@ -1,0 +1,61 @@
+server:
+  shutdown: graceful
+
+spring:
+  application:
+    name: t1_java_kafka
+  jpa:
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: "jdbc:postgresql://${DB_HOST:localhost:5432}/school?currentSchema=t1_demo"
+    username: ${DB_USER:t1}
+    password: ${DB_PASSWORD:0000}
+    driverClassName: org.postgresql.Driver
+    hikari:
+      pool-name: T1-DEMO-KAFKA-POOL
+      auto-commit: false
+      max-lifetime: 0
+      minimum-idle: 2
+      maximum-pool-size: 5
+
+t1-demo:
+  transaction:
+    limit: 4
+    period: 10s
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    listener:
+      ack-mode: manual_immediate
+      poll-timeout: 5000
+      concurrency: 1
+      micrometer-enabled: true
+      batch-listener: true
+      error-handler:
+        interval: 1000
+        max-attempts: 3
+    producers:
+      transaction_result:
+        topic: t1_demo_transaction_result
+        acks: all
+        retries: 3
+        retry-backoff-ms: 1000
+        enable-idempotence: false
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumers:
+      transaction_accept:
+        topic: t1_demo_transaction_accept
+        group-id: t1-transaction-accept-group
+        enable-auto-commit: false
+        auto-offset-reset: earliest
+        max-poll-records: 1
+        max-poll-interval-ms: 3000
+        session-timeout-ms: 15000
+        max-partition-fetch-bytes: 300000
+        type-dto: ru.t1.java.demo.dto.TransactionAcceptDto
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: ru.t1.java.demo.kafka.MessageDeserializer
