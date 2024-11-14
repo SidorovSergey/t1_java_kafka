@@ -27,7 +27,7 @@ t1-demo:
     limit: 4
     period: 10s
   kafka:
-    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:29092,localhost:29093}
     listener:
       ack-mode: manual_immediate
       poll-timeout: 5000
